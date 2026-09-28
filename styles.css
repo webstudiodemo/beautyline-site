@@ -65,3 +65,32 @@
   .corporate-links a{grid-template-columns:30px 1fr 18px}
   .corporate-links small{display:none}
 }
+
+
+/* ===== NATIVE DETAIL EXPERIENCE ===== */
+.service-directory .directory-grid{gap:0;background:transparent}
+.service-directory .directory-group{position:relative}
+.service-directory .directory-group a{cursor:pointer}
+.detail-modal{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;padding:30px}
+.detail-modal.open{display:flex}
+.detail-backdrop{position:absolute;inset:0;background:rgba(14,21,19,.78);backdrop-filter:blur(14px)}
+.detail-panel{position:relative;z-index:1;width:min(900px,94vw);max-height:88svh;overflow:auto;background:#f5f1eb;color:var(--ink);padding:58px 64px;box-shadow:0 40px 120px rgba(0,0,0,.28)}
+.detail-close{position:absolute;right:22px;top:22px;width:42px;height:42px;border:1px solid var(--line);border-radius:50%;background:transparent;font-size:25px}
+.detail-index{font-size:8px;letter-spacing:.24em;color:#8b948f;margin-bottom:35px}
+.detail-panel h2{font:500 clamp(52px,6vw,82px)/.82 var(--serif);letter-spacing:-.05em;margin:0 0 24px}
+.detail-lead{font:500 19px/1.55 var(--serif);max-width:640px;margin:0 0 42px}
+.detail-columns{display:grid;grid-template-columns:1.15fr .85fr;gap:60px;padding:30px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.detail-label{display:block;font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:#78817c;margin-bottom:14px}
+.detail-columns p{font-size:13px;line-height:1.9;color:var(--muted);margin:0}
+.detail-columns ul{margin:0;padding:0;list-style:none}
+.detail-columns li{font-size:11px;line-height:1.6;padding:10px 0;border-bottom:1px solid rgba(24,33,31,.08)}
+.detail-columns li::before{content:'—';margin-right:10px;color:#8b948f}
+.detail-actions{display:flex;align-items:center;gap:24px;margin-top:32px}
+.detail-actions .btn{width:auto}
+.detail-back{background:none;border-bottom:1px solid #8b948f;padding:8px 0;font-size:9px;letter-spacing:.14em;text-transform:uppercase}
+@media(max-width:700px){
+ .detail-panel{padding:45px 26px}
+ .detail-columns{grid-template-columns:1fr;gap:30px}
+ .detail-actions{align-items:flex-start;flex-direction:column}
+ .detail-actions .btn{width:100%}
+}
