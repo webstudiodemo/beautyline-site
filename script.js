@@ -175,6 +175,14 @@ function setSchedulerStep(step){
 $$('[data-open-scheduler]').forEach(el=>el.addEventListener('click',e=>{e.preventDefault();openScheduler()}));
 $$('[data-close-booking]').forEach(el=>el.addEventListener('click',closeScheduler));
 
+$$('.service-card').forEach(card=>card.addEventListener('click',()=>{
+  openScheduler();
+  window.setTimeout(()=>{
+    const choice=$('[data-service-choice="'+CSS.escape(card.dataset.service||'')+'"]',schedulerModal);
+    if(choice) choice.click();
+  },120);
+}));
+
 $$('[data-service-choice]').forEach(btn=>btn.addEventListener('click',()=>{
   appointmentState.service=btn.dataset.serviceChoice;
   selectedServiceLabel.textContent=appointmentState.service;
