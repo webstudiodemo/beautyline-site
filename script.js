@@ -105,48 +105,206 @@ $$('[data-direct-whatsapp]').forEach(el => el.addEventListener('click', e => {
   openWhatsApp();
 }));
 
-// Detailed appointment modal remains available from service cards.
-const modal = $('.booking-modal');
-const openModal = () => {
-  modal.classList.add('open');
-  modal.setAttribute('aria-hidden','false');
+// ===== PREMIUM ONLINE APPOINTMENT SYSTEM =====
+const schedulerModal = $('.scheduler-modal');
+const adminModal = $('.admin-modal');
+const schedulerSteps = $$('.scheduler-step', schedulerModal);
+const schedulerDots = $$('[data-step-dot]', schedulerModal);
+const schedulerBack = $('[data-scheduler-back]', schedulerModal);
+const schedulerSuccess = $('#scheduler-success', schedulerModal);
+const calendarGrid = $('#calendar-grid', schedulerModal);
+const calendarMonth = $('#calendar-month', schedulerModal);
+const timeSlots = $('#time-slots', schedulerModal);
+const selectedDateLabel = $('#selected-date-label', schedulerModal);
+const selectedServiceLabel = $('#selected-service-label', schedulerModal);
+const bookingSummary = $('#booking-summary', schedulerModal);
+
+const SERVICE_DURATIONS = {
+  'Cilt Bakımı':60,'Vücut Bakımı':60,'Kaş & Kirpik':45,
+  'El & Ayak Bakımı':60,'Makyaj & Gelin':90,'Diğer':60
+};
+const SLOT_TIMES = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00'];
+const STORAGE_KEY = 'beautylineAppointmentsV1';
+let appointmentState = { step:1, service:'', date:null, time:null, month:new Date(new Date().getFullYear(),new Date().getMonth(),1) };
+
+function getAppointments(){
+  try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]')}catch(e){return []}
+}
+function saveAppointments(items){localStorage.setItem(STORAGE_KEY,JSON.stringify(items))}
+function pad(n){return String(n).padStart(2,'0')}
+function dateKey(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function formatDate(key){
+  if(!key)return '';
+  const [y,m,d]=key.split('-').map(Number);
+  return new Intl.DateTimeFormat('tr-TR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date(y,m-1,d));
+}
+function isClosedDate(d){ return d.getDay()===2; } // Demo: Tuesday closed; editable in production admin settings.
+function busyForDate(key){
+  const real=getAppointments().filter(a=>a.date===key && a.status!=='cancelled').map(a=>a.time);
+  const [y,m,d]=key.split('-').map(Number);
+  const seed=(y*31+m*17+d*13)%7;
+  const demo=['10:30','13:30','15:30'].filter((_,i)=>(seed+i)%2===0);
+  return [...new Set([...demo,...real])];
+}
+function openScheduler(){
+  if(!schedulerModal)return;
+  appointmentState={step:1,service:'',date:null,time:null,month:new Date(new Date().getFullYear(),new Date().getMonth(),1)};
+  schedulerSuccess.classList.remove('open');
+  schedulerSuccess.setAttribute('aria-hidden','true');
+  schedulerSteps.forEach(s=>s.classList.toggle('active',s.dataset.step==='1'));
+  schedulerDots.forEach(d=>d.classList.toggle('active',d.dataset.step==='1'));
+  schedulerBack.disabled=true;
+  renderCalendar();
+  schedulerModal.classList.add('open');
+  schedulerModal.setAttribute('aria-hidden','false');
   document.body.style.overflow='hidden';
-  setTimeout(()=>$('.modal-panel input',modal)?.focus(),80);
-};
-const closeModal = () => {
-  modal.classList.remove('open');
-  modal.setAttribute('aria-hidden','true');
+}
+function closeScheduler(){
+  schedulerModal?.classList.remove('open');
+  schedulerModal?.setAttribute('aria-hidden','true');
   document.body.style.overflow='';
-};
-$$('[data-open-booking]').forEach(el=>el.addEventListener('click',openModal));
-$$('[data-close-booking]').forEach(el=>el.addEventListener('click',closeModal));
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))closeModal()});
+}
+function setSchedulerStep(step){
+  appointmentState.step=step;
+  schedulerSteps.forEach(s=>s.classList.toggle('active',Number(s.dataset.step)===step));
+  schedulerDots.forEach(d=>d.classList.toggle('active',Number(d.dataset.step)<=step));
+  schedulerBack.disabled=step===1;
+  if(step===2) renderCalendar();
+  if(step===3) renderSummary();
+}
+$$('[data-open-scheduler]').forEach(el=>el.addEventListener('click',e=>{e.preventDefault();openScheduler()}));
+$$('[data-close-booking]').forEach(el=>el.addEventListener('click',closeScheduler));
 
-$('#booking-form')?.addEventListener('submit', e => {
-  e.preventDefault();
-  const data = Object.fromEntries(new FormData(e.currentTarget).entries());
-  const msg = [
-    'Merhaba Beautyline Güzellik, randevu talebinde bulunmak istiyorum.', '',
-    `Ad Soyad: ${data.name}`,
-    `Telefon: ${data.phone}`,
-    `Hizmet: ${data.service}`,
-    `Tercih edilen tarih: ${data.date}`,
-    `Tercih edilen saat: ${data.time}`,
-    data.note ? `Not: ${data.note}` : ''
-  ].filter(Boolean).join('\n');
-  openWhatsApp(msg);
-});
-
-$$('.service-card').forEach(card=>card.addEventListener('click',()=>{
-  openModal();
-  setTimeout(()=>{
-    const select=$('select[name="service"]');
-    if(select) select.value=card.dataset.service || '';
-  },80);
+$$('[data-service-choice]').forEach(btn=>btn.addEventListener('click',()=>{
+  appointmentState.service=btn.dataset.serviceChoice;
+  selectedServiceLabel.textContent=appointmentState.service;
+  $$('[data-service-choice]').forEach(x=>x.classList.remove('selected'));
+  btn.classList.add('selected');
+  setSchedulerStep(2);
 }));
 
-const dateInput = $('input[type="date"]');
-if(dateInput) dateInput.min = new Date().toISOString().split('T')[0];
+function renderCalendar(){
+  if(!calendarGrid)return;
+  const y=appointmentState.month.getFullYear(), m=appointmentState.month.getMonth();
+  calendarMonth.textContent=new Intl.DateTimeFormat('tr-TR',{month:'long',year:'numeric'}).format(appointmentState.month);
+  calendarGrid.innerHTML='';
+  const first=new Date(y,m,1), days=new Date(y,m+1,0).getDate();
+  let mondayIndex=(first.getDay()+6)%7;
+  for(let i=0;i<mondayIndex;i++) calendarGrid.insertAdjacentHTML('beforeend','<div class="calendar-day empty"></div>');
+  const today=new Date(); today.setHours(0,0,0,0);
+  for(let day=1;day<=days;day++){
+    const d=new Date(y,m,day); d.setHours(0,0,0,0);
+    const key=dateKey(d), closed=isClosedDate(d), past=d<today, busy=busyForDate(key);
+    const allBusy=busy.length>=12;
+    const available=!past&&!closed&&!allBusy;
+    const selected=appointmentState.date===key;
+    const el=document.createElement('button');
+    el.type='button';
+    el.className='calendar-day '+(past?'past ':'')+(closed?'closed ':'')+(available?'available ':'')+(allBusy?'full ':'')+(selected?'selected':'');
+    el.innerHTML='<span class="day-number">'+day+'</span><span class="day-status">'+(closed?'Kapalı':past?'':' '+(allBusy?'Dolu':'Müsait'))+'</span>';
+    if(available){
+      el.addEventListener('click',()=>{
+        appointmentState.date=key; appointmentState.time=null;
+        renderCalendar(); renderTimeSlots();
+      });
+    }else el.disabled=true;
+    calendarGrid.appendChild(el);
+  }
+  renderTimeSlots();
+}
+function renderTimeSlots(){
+  if(!timeSlots)return;
+  timeSlots.innerHTML='';
+  if(!appointmentState.date){
+    timeSlots.innerHTML='<p class="slot-empty">Önce takvimden bir gün seçin.</p>'; 
+    selectedDateLabel.textContent='Bir gün seçin'; return;
+  }
+  selectedDateLabel.textContent=formatDate(appointmentState.date);
+  const busy=busyForDate(appointmentState.date);
+  SLOT_TIMES.forEach(time=>{
+    const b=document.createElement('button'); b.type='button';
+    const isBusy=busy.includes(time);
+    b.className='time-slot '+(isBusy?'full ':'')+(appointmentState.time===time?'selected':'');
+    b.textContent=time;
+    if(!isBusy)b.addEventListener('click',()=>{
+      appointmentState.time=time;
+      renderTimeSlots();
+      window.setTimeout(()=>setSchedulerStep(3),220);
+    }); else b.disabled=true;
+    timeSlots.appendChild(b);
+  });
+}
+$('[data-calendar-prev]',schedulerModal)?.addEventListener('click',()=>{
+  appointmentState.month=new Date(appointmentState.month.getFullYear(),appointmentState.month.getMonth()-1,1); renderCalendar();
+});
+$('[data-calendar-next]',schedulerModal)?.addEventListener('click',()=>{
+  appointmentState.month=new Date(appointmentState.month.getFullYear(),appointmentState.month.getMonth()+1,1); renderCalendar();
+});
+schedulerBack?.addEventListener('click',()=>setSchedulerStep(Math.max(1,appointmentState.step-1)));
+
+function renderSummary(){
+  bookingSummary.innerHTML=[
+    ['Hizmet',appointmentState.service],
+    ['Tarih',formatDate(appointmentState.date)],
+    ['Saat',appointmentState.time]
+  ].map(x=>'<div><span>'+x[0]+'</span><strong>'+x[1]+'</strong></div>').join('');
+}
+$('#scheduler-form')?.addEventListener('submit',e=>{
+  e.preventDefault();
+  const data=Object.fromEntries(new FormData(e.currentTarget).entries());
+  const appointment={
+    id:Date.now().toString(36),name:data.name,phone:data.phone,note:data.note||'',
+    service:appointmentState.service,date:appointmentState.date,time:appointmentState.time,
+    status:'confirmed',createdAt:new Date().toISOString()
+  };
+  const items=getAppointments();
+  items.push(appointment); saveAppointments(items);
+  $('#success-name').textContent=data.name;
+  $('#success-card').innerHTML=[
+    ['Hizmet',appointment.service],['Tarih',formatDate(appointment.date)],['Saat',appointment.time],
+    ['Telefon',appointment.phone]
+  ].map(x=>'<div><span>'+x[0]+'</span><strong>'+x[1]+'</strong></div>').join('');
+  schedulerSteps.forEach(s=>s.classList.remove('active'));
+  schedulerSuccess.classList.add('open');
+  schedulerSuccess.setAttribute('aria-hidden','false');
+  appointmentState.step=4;
+  schedulerBack.disabled=true;
+});
+$('[data-success-whatsapp]',schedulerModal)?.addEventListener('click',()=>{
+  const a=getAppointments().slice(-1)[0];
+  if(a) openWhatsApp('Merhaba Beautyline Güzellik, online randevumu oluşturdum.\\n\\nHizmet: '+a.service+'\\nTarih: '+formatDate(a.date)+'\\nSaat: '+a.time+'\\nAd Soyad: '+a.name);
+});
+
+// Admin panel — available via ?admin=1 or Alt+A on desktop.
+function renderAdmin(){
+  const list=$('#admin-list',adminModal), count=$('#admin-count',adminModal);
+  if(!list)return;
+  const items=getAppointments().filter(a=>a.status!=='cancelled').sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  count.textContent=items.length;
+  if(!items.length){list.innerHTML='<div class="slot-empty">Henüz randevu bulunmuyor.</div>';return;}
+  list.innerHTML=items.map(a=>'<div class="admin-row">'+
+    '<div><small>'+a.date+'</small><strong>'+a.time+'</strong></div>'+
+    '<div><small>Müşteri</small><strong>'+a.name+'</strong></div>'+
+    '<div><small>Hizmet</small><strong>'+a.service+'</strong></div>'+
+    '<div><small>Telefon</small><strong>'+a.phone+'</strong></div>'+
+    '<div><button data-cancel-admin="'+a.id+'">İptal et</button></div>'+
+    '</div>').join('');
+  $$('[data-cancel-admin]',adminModal).forEach(btn=>btn.addEventListener('click',()=>{
+    const updated=getAppointments().map(a=>a.id===btn.dataset.cancelAdmin?{...a,status:'cancelled'}:a);
+    saveAppointments(updated); renderAdmin();
+  }));
+}
+function openAdmin(){
+  renderAdmin(); adminModal.classList.add('open'); adminModal.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden';
+}
+function closeAdmin(){adminModal?.classList.remove('open');adminModal?.setAttribute('aria-hidden','true');document.body.style.overflow='';}
+$$('[data-close-admin]').forEach(el=>el.addEventListener('click',closeAdmin));
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){if(schedulerModal?.classList.contains('open'))closeScheduler(); if(adminModal?.classList.contains('open'))closeAdmin()}
+  if(e.altKey&&e.key.toLowerCase()==='a')openAdmin();
+});
+if(new URLSearchParams(location.search).get('admin')==='1') window.setTimeout(openAdmin,700);
+
 
 // Respect reduced-motion preferences.
 if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
