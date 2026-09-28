@@ -191,9 +191,18 @@
       </div>
     </section>
 
+
     <section class="booking section" id="randevu">
       <div class="booking-bg scroll-media"></div>
-      <div class="booking-inner reveal"><p class="eyebrow"><span></span> Kendinize zaman ayırın</p><h2>Bir sonraki<br><em>güzel anınız.</em></h2><p>Uygulamanızı seçin, size uygun günü ve saati belirtin. Randevu talebiniz WhatsApp üzerinden Beautyline ekibine iletilsin.</p><button class="btn btn-light magnetic" data-direct-whatsapp>Randevu Talebi Gönder <span>↗</span></button></div>
+      <div class="booking-inner reveal">
+        <p class="eyebrow"><span></span> Yeni randevu deneyimi</p>
+        <h2>Size uygun zamanı<br><em>kendiniz seçin.</em></h2>
+        <p>Hizmetinizi seçin, müsait gün ve saatleri görüntüleyin ve randevunuzu birkaç adımda oluşturun. Dilerseniz WhatsApp üzerinden de doğrudan iletişime geçebilirsiniz.</p>
+        <div class="booking-cta-row">
+          <button class="btn btn-light magnetic" data-open-scheduler>Online Randevu Al <span>↗</span></button>
+          <button class="booking-secondary" data-direct-whatsapp>WhatsApp'tan Randevu <span>↗</span></button>
+        </div>
+      </div>
     </section>
 
     <section class="contact section" id="iletisim">
@@ -235,20 +244,97 @@
     </article>
   </div>
 
-  <div class="booking-modal" aria-hidden="true">
+
+  <div class="booking-modal scheduler-modal" aria-hidden="true">
     <div class="modal-backdrop" data-close-booking></div>
-    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="booking-title">
+    <div class="scheduler-panel" role="dialog" aria-modal="true" aria-labelledby="scheduler-title">
       <button class="modal-close" data-close-booking aria-label="Kapat">×</button>
-      <p class="eyebrow dark"><span></span> Randevu talebi</p><h2 id="booking-title">Size uygun zamanı<br><em>birlikte bulalım.</em></h2>
-      <form id="booking-form">
-        <label>Adınız<input required name="name" autocomplete="name" placeholder="Ad Soyad"></label>
-        <label>Telefon<input required name="phone" autocomplete="tel" placeholder="05xx xxx xx xx"></label>
-        <label>Hizmet<select required name="service"><option value="">Seçiniz</option><option>Cilt Bakımı</option><option>Vücut Bakımı</option><option>Kaş & Kirpik</option><option>El & Ayak Bakımı</option><option>Makyaj & Gelin</option><option>Diğer</option></select></label>
-        <div class="form-row"><label>Tercih edilen gün<input required type="date" name="date"></label><label>Tercih edilen saat<input required type="time" name="time"></label></div>
-        <label>Notunuz (opsiyonel)<textarea name="note" rows="3" placeholder="Varsa eklemek istediğiniz bir not..."></textarea></label>
-        <button class="btn btn-dark" type="submit">WhatsApp ile Gönder <span>↗</span></button>
-        <small class="form-hint">Gönder butonu WhatsApp'ı açar ve randevu bilgilerinizi hazır mesaj olarak doldurur.</small>
-      </form>
+
+      <div class="scheduler-head">
+        <div>
+          <p class="eyebrow dark"><span></span> Online randevu</p>
+          <h2 id="scheduler-title">Randevunuzu<br><em>planlayın.</em></h2>
+        </div>
+        <div class="scheduler-progress" aria-label="Randevu adımı">
+          <span class="active" data-step-dot="1">01</span>
+          <i></i><span data-step-dot="2">02</span><i></i><span data-step-dot="3">03</span>
+        </div>
+      </div>
+
+      <div class="scheduler-step active" data-step="1">
+        <div class="scheduler-step-title"><span>01</span><div><strong>Hizmetinizi seçin</strong><small>Size uygun uygulamayı belirleyin.</small></div></div>
+        <div class="appointment-services">
+          <button type="button" data-service-choice="Cilt Bakımı"><span>Cilt & Göz</span><strong>Cilt Bakımı</strong><small>İhtiyaç odaklı bakım</small><b>↗</b></button>
+          <button type="button" data-service-choice="Vücut Bakımı"><span>Vücut</span><strong>Vücut Bakımı</strong><small>Yosun · G5 · ritüeller</small><b>↗</b></button>
+          <button type="button" data-service-choice="Kaş & Kirpik"><span>Güzellik</span><strong>Kaş & Kirpik</strong><small>Dizayn · kirpik · boyama</small><b>↗</b></button>
+          <button type="button" data-service-choice="El & Ayak Bakımı"><span>Tırnak</span><strong>El & Ayak</strong><small>Manikür · pedikür · spa</small><b>↗</b></button>
+          <button type="button" data-service-choice="Makyaj & Gelin"><span>Özel Gün</span><strong>Makyaj & Gelin</strong><small>Profesyonel · özel gün</small><b>↗</b></button>
+          <button type="button" data-service-choice="Diğer"><span>Beautyline</span><strong>Diğer</strong><small>Farklı bir uygulama</small><b>↗</b></button>
+        </div>
+      </div>
+
+      <div class="scheduler-step" data-step="2">
+        <div class="scheduler-step-title"><span>02</span><div><strong>Gün ve saati seçin</strong><small><em id="selected-service-label">Hizmet</em> için müsaitlik.</small></div></div>
+        <div class="calendar-toolbar">
+          <button type="button" class="calendar-nav" data-calendar-prev>←</button>
+          <strong id="calendar-month">Eylül 2026</strong>
+          <button type="button" class="calendar-nav" data-calendar-next>→</button>
+        </div>
+        <div class="calendar-weekdays"><span>Pzt</span><span>Sal</span><span>Çar</span><span>Per</span><span>Cum</span><span>Cmt</span><span>Paz</span></div>
+        <div class="calendar-grid" id="calendar-grid"></div>
+        <div class="slot-heading"><span>Seçili gün</span><strong id="selected-date-label">Bir gün seçin</strong></div>
+        <div class="time-slots" id="time-slots"></div>
+        <div class="availability-note"><span></span> Müsait saatler gerçek zamanlı randevu sistemi için hazırlandı.</div>
+      </div>
+
+      <div class="scheduler-step" data-step="3">
+        <div class="scheduler-step-title"><span>03</span><div><strong>Bilgilerinizi bırakın</strong><small>Randevunuzu oluşturmak için son adım.</small></div></div>
+        <div class="booking-summary" id="booking-summary"></div>
+        <form id="scheduler-form">
+          <div class="scheduler-form-grid">
+            <label>Ad Soyad<input required name="name" autocomplete="name" placeholder="Ad Soyad"></label>
+            <label>Telefon<input required name="phone" autocomplete="tel" placeholder="05xx xxx xx xx"></label>
+          </div>
+          <label>Not <textarea name="note" rows="3" placeholder="Varsa eklemek istediğiniz bir not..."></textarea></label>
+          <button class="btn btn-dark" type="submit">Randevuyu Oluştur <span>↗</span></button>
+          <small class="form-hint">Randevu oluşturulduktan sonra isterseniz WhatsApp üzerinden Beautyline ekibiyle de iletişime geçebilirsiniz.</small>
+        </form>
+      </div>
+
+      <div class="scheduler-success" id="scheduler-success" aria-hidden="true">
+        <div class="success-mark">✓</div>
+        <p class="eyebrow dark"><span></span> Randevu hazır</p>
+        <h2>Görüşmek üzere,<br><em id="success-name">Beautyline misafiri.</em></h2>
+        <div class="success-card" id="success-card"></div>
+        <div class="success-actions">
+          <button class="btn btn-dark" data-success-whatsapp>WhatsApp'tan İletişime Geç <span>↗</span></button>
+          <button class="detail-back" data-close-booking>Kapat</button>
+        </div>
+      </div>
+
+      <div class="scheduler-footer">
+        <button type="button" class="scheduler-back" data-scheduler-back>← Geri</button>
+        <span>Beautyline · Çayyolu / Ankara</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-modal" aria-hidden="true">
+    <div class="modal-backdrop" data-close-admin></div>
+    <div class="admin-panel" role="dialog" aria-modal="true" aria-labelledby="admin-title">
+      <button class="modal-close" data-close-admin aria-label="Kapat">×</button>
+      <div class="admin-head">
+        <div><p class="eyebrow dark"><span></span> İşletme paneli</p><h2 id="admin-title">Randevu<br><em>yönetimi.</em></h2></div>
+        <div class="admin-stat"><strong id="admin-count">0</strong><span>kayıtlı randevu</span></div>
+      </div>
+      <div class="admin-toolbar">
+        <button class="admin-tab active" data-admin-view="today">Bugün</button>
+        <button class="admin-tab" data-admin-view="week">Takvim</button>
+        <button class="admin-tab" data-admin-view="all">Tümü</button>
+        <button class="admin-add" data-admin-add>+ Randevu ekle</button>
+      </div>
+      <div class="admin-list" id="admin-list"></div>
+      <div class="admin-note">Demo paneli: Randevu verileri bu tarayıcıda saklanır. Gerçek işletme kullanımında ortak veritabanına bağlanabilir.</div>
     </div>
   </div>
 
