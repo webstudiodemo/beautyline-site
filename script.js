@@ -161,6 +161,7 @@ const detailLead = $('#detail-lead');
 const detailCopy = $('#detail-copy');
 const detailList = $('#detail-list');
 const detailIndex = $('#detail-index');
+const detailKicker = $('#detail-kicker');
 
 const serviceDetails = {
   "Cilt Bakımı": {cat:"Cilt & Göz",lead:"Cildiniz için ihtiyaç odaklı profesyonel bakım.",copy:"Eski Beautyline hizmet arşivindeki yaklaşım doğrultusunda bakım öncesinde cilt analizi yapılarak uygun ürün ve cihazların belirlenmesi esas alınır.",list:["Analiz ve ihtiyaç belirleme","Temizleme, canlandırma ve nemlendirme odaklı seçenekler","Bakım planının cilt yapısına göre şekillendirilmesi"]},
