@@ -32,3 +32,10 @@ alanını işletmenin WhatsApp numarasıyla değiştirin. Numara `905xxxxxxxxx` 
 
 ## Not
 Görseller harici Unsplash CDN görselleridir. İsterseniz gerçek Beautyline iç mekan, ekip ve uygulama fotoğrafları `index.html` içindeki görsel URL'leriyle değiştirilebilir.
+
+## Güncelleme
+- Randevu CTA'ları doğrudan WhatsApp'a yönlenir.
+- WhatsApp hedefi `905467249922` olarak ayarlanmıştır.
+- Sinematik karanlık açılış / logo reveal eklendi.
+- Scroll sırasında kartlar, görseller ve bölümler sürekli viewport konumuna göre hareket eder; aşağı/yukarı kaydırmada animasyon yeniden canlı kalır.
+- Mouse-follow glow ve magnetic buton efektleri korunmuştur.
